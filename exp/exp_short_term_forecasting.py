@@ -74,6 +74,8 @@ class Exp_Short_Term_Forecast(Exp_Basic):
             self.model.train()
             epoch_time = time.time()
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
+                print("batch_y.shape1")
+                print(batch_y.shape)
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
@@ -81,10 +83,22 @@ class Exp_Short_Term_Forecast(Exp_Basic):
                 batch_y = batch_y.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
 
+                print("batch_y.shape")
+                print(batch_y.shape)
+                print("self.args.pred_len")
+                print(self.args.pred_len)
+                print("self.args.label_len")
+                print(self.args.label_len)
                 # decoder input
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
+                print("dec_inp.shape1")
+                print(dec_inp.shape)
                 dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
 
+                print("batch_x.shape")
+                print(batch_x.shape)
+                print("dec_inp.shape")
+                print(dec_inp.shape)
                 outputs = self.model(batch_x, None, dec_inp, None)
 
                 f_dim = -1 if self.args.features == 'MS' else 0

@@ -1,9 +1,10 @@
 from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_M4, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_BTC_minute
 from data_provider.uea import collate_fn
 from torch.utils.data import DataLoader
 
 data_dict = {
+    'BTC': Dataset_BTC_minute,
     'ETTh1': Dataset_ETT_hour,
     'ETTh2': Dataset_ETT_hour,
     'ETTm1': Dataset_ETT_minute,
@@ -76,7 +77,7 @@ def data_provider(args, flag):
             freq=freq,
             seasonal_patterns=args.seasonal_patterns
         )
-        print(flag, len(data_set))
+        print(flag, len(data_set), batch_size, shuffle_flag, args.num_workers, drop_last)
         data_loader = DataLoader(
             data_set,
             batch_size=batch_size,
