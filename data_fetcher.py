@@ -54,9 +54,9 @@ if __name__ == "__main__":
     symbol = 'BTC/USDT'
     timeframe = '1m'
     # 指定起始时间
-    from_ts = exchange.parse8601('2014-01-01 00:00:00')
+    from_ts = exchange.parse8601('2023-06-01 00:00:00')
     # 设置CSV文件名
-    csv_filename = 'btc_usdt_1m_data.csv'
+    csv_filename = 'btc-2023-06-01.csv'
 
     # 获取数据并保存到CSV文件
     fetch_and_save_ohlcv_to_csv(exchange, symbol, timeframe, from_ts, csv_filename)

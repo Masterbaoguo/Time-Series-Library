@@ -50,9 +50,11 @@ class Dataset_BTC_minute(Dataset):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
-
-        border1s = [0, 12 * 30 * 24 * 60 - self.seq_len, 12 * 30 * 24 * 60 + 4 * 30 * 24 * 60 - self.seq_len]
-        border2s = [12 * 30 * 24 * 60, 12 * 30 * 24 * 60 + 4 * 30 * 24 * 60, 12 * 30 * 24 * 60 + 8 * 30 * 24 * 60]
+        train_month = 2 # 12
+        val_month = 1   # 4
+        test_month = 1  # 4
+        border1s = [0, train_month * 30 * 24 * 60 - self.seq_len, (train_month + val_month) * 30 * 24 * 60 - self.seq_len]
+        border2s = [train_month * 30 * 24 * 60, (train_month + val_month) * 30 * 24 * 60, (train_month + test_month + val_month) * 30 * 24 * 60]
         border1 = border1s[self.set_type]
         border2 = border2s[self.set_type]
 
