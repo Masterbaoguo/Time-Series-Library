@@ -12,7 +12,7 @@ python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path .
 
 python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path ./dataset/btc/  --data_path btc_usdt_1m_data.csv  --model_id BTCm1_96_96  --model TimesNet  --data BTC  --features MS  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 2  --d_layers 1  --factor 3  --enc_in 5  --dec_in 5  --c_out 5  --des 'Exp'  --d_model 64  --d_ff 64  --top_k 5  --itr 1 --target close --freq t
 
-python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path ./dataset/btc/  --data_path btc-2014-01-01.csv  --model_id BTCh_96_96  --model PatchTST  --data custom  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 5  --dec_in 5  --c_out 5  --des 'Exp'  --n_heads 2  --batch_size 32  --itr 1
+python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path ./dataset/btc/  --data_path btc-2013-01-01-1h.csv  --model_id BTCh_96_96  --model PatchTST  --data custom  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 11  --dec_in 11  --c_out 11  --des 'Exp'  --n_heads 2  --batch_size 32  --itr 1
 
 
-python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path ./dataset/btc/  --data_path btc-2024-01-01.csv  --model_id BTCh_96_96  --model PatchTST  --data BTC  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 5  --dec_in 5  --c_out 5  --des 'Exp'  --n_heads 2  --batch_size 32  --itr 1
+python -u run.py  --task_name long_term_forecast  --is_training 1  --root_path ./dataset/btc/  --data_path btc-2021-01-01.csv  --model_id BTCh_96_96  --model PatchTST  --data BTC  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 5  --dec_in 5  --c_out 5  --des 'Exp'  --n_heads 2  --batch_size 32  --itr 1
