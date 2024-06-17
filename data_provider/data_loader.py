@@ -12,8 +12,110 @@ from data_provider.uea import subsample, interpolate_missing, Normalizer
 from sktime.datasets import load_from_tsfile_to_dataframe
 import warnings
 from utils.augmentation import run_augmentation_single
-
+from data_fetcher import CryptoDataLoader
 warnings.filterwarnings('ignore')
+
+class Dataset_BTC_RT_minute(Dataset):
+    def __init__(self, args, root_path, flag='train', size=None,
+                 features='S', data_path='ETTh1.csv',
+                 target='OT', scale=True, timeenc=0, freq='t', seasonal_patterns=None):
+        self.args = args
+        self.root_path = root_path
+        self.flag = flag
+        self.size = size
+        self.features = features
+        self.data_path = data_path
+        self.target = target
+        self.scale = scale
+        self.timeenc = timeenc
+        self.freq = freq
+        self.seasonal_patterns = seasonal_patterns
+        self.seq_len = size[0]
+        self.label_len = size[1]
+        self.pred_len = size[2]
+
+        # Initialize CryptoDataLoader
+        self.loader = CryptoDataLoader()
+
+        # Initial read data
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        if not os.path.exists(self.loader.csv_filename):
+            self.loader.load_initial_data()
+        else:
+            self.loader.df = pd.read_csv(self.loader.csv_filename, parse_dates=['date'])
+            self.loader.print_latest_data()
+        
+        df_raw = self.loader.get_data()
+        '''
+        df_raw.columns: ['date', ...(other features), target feature]
+        '''
+        cols = list(df_raw.columns)
+        cols.remove(self.target)
+        cols.remove('date')
+        df_raw = df_raw[['date'] + cols + [self.target]]
+
+        if self.features == 'M' or self.features == 'MS':
+            cols_data = df_raw.columns[1:]
+            df_data = df_raw[cols_data]
+        elif self.features == 'S':
+            df_data = df_raw[[self.target]]
+
+        if self.scale:
+            train_data = df_data
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(df_data.values)
+        else:
+            data = df_data.values
+
+        df_stamp = df_raw[['date']]
+        df_stamp['date'] = pd.to_datetime(df_stamp.date)
+        if self.timeenc == 0:
+            df_stamp['month'] = df_stamp.date.apply(lambda row: row.month, 1)
+            df_stamp['day'] = df_stamp.date.apply(lambda row: row.day, 1)
+            df_stamp['weekday'] = df_stamp.date.apply(lambda row: row.weekday(), 1)
+            df_stamp['hour'] = df_stamp.date.apply(lambda row: row.hour, 1)
+            df_stamp['minute'] = df_stamp.date.apply(lambda row: row.minute, 1)
+            data_stamp = df_stamp.drop(['date'], 1).values
+        elif self.timeenc == 1:
+            data_stamp = time_features(pd.to_datetime(df_stamp['date'].values), freq=self.freq)
+            data_stamp = data_stamp.transpose(1, 0)
+
+        self.data_x = data
+        self.data_y = data
+
+        if self.flag == 'train' and self.args.augmentation_ratio > 0:
+            self.data_x, self.data_y, augmentation_tags = run_augmentation_single(self.data_x, self.data_y, self.args)
+
+        self.data_stamp = data_stamp
+
+    def update_data(self):
+        """Method to update data by re-fetching the latest data and reprocessing it."""
+        self.loader.append_new_data()
+        self.__read_data__()
+
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)
+
+
 
 class Dataset_Custom_minute(Dataset):
     def __init__(self, args, root_path, flag='train', size=None,

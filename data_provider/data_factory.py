@@ -1,9 +1,10 @@
 from data_provider.data_loader import Dataset_Custom_minute, Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_M4, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_BTC_minute
+    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_BTC_minute, Dataset_BTC_RT_minute
 from data_provider.uea import collate_fn
 from torch.utils.data import DataLoader
 
 data_dict = {
+    'rtBTC': Dataset_BTC_RT_minute,
     'BTC': Dataset_Custom_minute,
     'ETTh1': Dataset_ETT_hour,
     'ETTh2': Dataset_ETT_hour,
