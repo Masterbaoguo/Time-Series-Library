@@ -6,6 +6,7 @@ from exp.exp_imputation import Exp_Imputation
 from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
 from exp.exp_anomaly_detection import Exp_Anomaly_Detection
 from exp.exp_classification import Exp_Classification
+from exp.exp_realtime_BTC_price_predictor import RealTimeBTCPricePredictor
 from utils.print_args import print_args
 import random
 import numpy as np
@@ -157,6 +158,8 @@ if __name__ == '__main__':
         Exp = Exp_Anomaly_Detection
     elif args.task_name == 'classification':
         Exp = Exp_Classification
+    elif args.task_name == 'btc_price_forecast':
+        Exp = RealTimeBTCPricePredictor
     else:
         Exp = Exp_Long_Term_Forecast
 

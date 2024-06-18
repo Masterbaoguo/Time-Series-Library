@@ -34,6 +34,14 @@ class CryptoDataLoader:
         # Start a separate thread to handle periodic CSV writing
         self.write_thread = threading.Thread(target=self.periodic_write_to_csv)
         self.write_thread.start()
+
+        if not os.path.exists(self.csv_filename):
+            self.load_initial_data()
+        else:
+            self.df = pd.read_csv(self.csv_filename, parse_dates=['date'])
+            print(f"Data loaded from {self.csv_filename}")
+            self.print_latest_data()
+        
         
     def fetch_all_ohlcv(self, since):
         all_bars = []
@@ -68,7 +76,6 @@ class CryptoDataLoader:
         print("Initial data loaded into memory.")
         print("All data:")
         print(self.df)
-        self.print_latest_data()
         
     def append_new_data(self):
         print(f"Fetching latest data for {self.symbol} and updating in-memory data.")
@@ -99,10 +106,13 @@ class CryptoDataLoader:
             self.df.to_csv(self.csv_filename, index=False)
             print(f"Data saved to {self.csv_filename}")
 
-    def get_data(self):
-        print("Returning all data:")
-        print(self.df)
-        return self.df
+    def get_data(self, pos=None):
+        # print("Returning all data:")
+        # print(self.df)
+        if(pos == None):
+            return self.df
+        else:
+            return self.df.iloc[pos:]
 
     def print_latest_data(self):
         if not self.df.empty:
@@ -123,13 +133,6 @@ if __name__ == "__main__":
     timeframe = '1m'
     csv_filename = f'./dataset/{symbol.replace("/", "_")}-{timeframe}.csv'
     loader = CryptoDataLoader(exchange_name, symbol, timeframe)
-    
-    if not os.path.exists(loader.csv_filename):
-        loader.load_initial_data()
-    else:
-        loader.df = pd.read_csv(loader.csv_filename, parse_dates=['date'])
-        print(f"Data loaded from {loader.csv_filename}")
-        loader.print_latest_data()
 
     try:
         while True:

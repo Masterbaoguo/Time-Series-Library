@@ -42,13 +42,8 @@ class Dataset_BTC_RT_minute(Dataset):
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        if not os.path.exists(self.loader.csv_filename):
-            self.loader.load_initial_data()
-        else:
-            self.loader.df = pd.read_csv(self.loader.csv_filename, parse_dates=['date'])
-            self.loader.print_latest_data()
-        
-        df_raw = self.loader.get_data()
+        df_raw = self.loader.get_data(-self.seq_len)
+        print('df_raw', df_raw)
         '''
         df_raw.columns: ['date', ...(other features), target feature]
         '''
@@ -86,10 +81,10 @@ class Dataset_BTC_RT_minute(Dataset):
         self.data_x = data
         self.data_y = data
 
-        if self.flag == 'train' and self.args.augmentation_ratio > 0:
-            self.data_x, self.data_y, augmentation_tags = run_augmentation_single(self.data_x, self.data_y, self.args)
-
         self.data_stamp = data_stamp
+
+        print('data_stamp', len(data_stamp))
+        print('data', len(data))
 
     def update_data(self):
         """Method to update data by re-fetching the latest data and reprocessing it."""
@@ -107,10 +102,14 @@ class Dataset_BTC_RT_minute(Dataset):
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
+        print('seq_x, seq_y, seq_x_mark, seq_y_mark')
+
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
-        return len(self.data_x) - self.seq_len - self.pred_len + 1
+        print('__len__', len(self.data_x), self.seq_len, self.pred_len)
+        # return len(self.data_x) - self.seq_len - self.pred_len + 1
+        return len(self.data_x) - self.seq_len
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
