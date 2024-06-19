@@ -36,6 +36,7 @@ class Dataset_BTC_RT_minute(Dataset):
 
         # Initialize CryptoDataLoader
         self.loader = CryptoDataLoader()
+        self.loader.append_new_data()
 
         # Initial read data
         self.__read_data__()
@@ -43,7 +44,7 @@ class Dataset_BTC_RT_minute(Dataset):
     def __read_data__(self):
         self.scaler = StandardScaler()
         df_raw = self.loader.get_data(-self.seq_len)
-        print('df_raw', df_raw)
+        self.loader.stop()
         '''
         df_raw.columns: ['date', ...(other features), target feature]
         '''
@@ -51,6 +52,7 @@ class Dataset_BTC_RT_minute(Dataset):
         cols.remove(self.target)
         cols.remove('date')
         df_raw = df_raw[['date'] + cols + [self.target]]
+        self.df_raw = df_raw
 
         if self.features == 'M' or self.features == 'MS':
             cols_data = df_raw.columns[1:]
@@ -67,6 +69,7 @@ class Dataset_BTC_RT_minute(Dataset):
 
         df_stamp = df_raw[['date']]
         df_stamp['date'] = pd.to_datetime(df_stamp.date)
+        self.last_time = pd.to_datetime(df_stamp['date'].values)[-1]
         if self.timeenc == 0:
             df_stamp['month'] = df_stamp.date.apply(lambda row: row.month, 1)
             df_stamp['day'] = df_stamp.date.apply(lambda row: row.day, 1)
@@ -83,13 +86,13 @@ class Dataset_BTC_RT_minute(Dataset):
 
         self.data_stamp = data_stamp
 
-        print('data_stamp', len(data_stamp))
-        print('data', len(data))
-
     def update_data(self):
         """Method to update data by re-fetching the latest data and reprocessing it."""
         self.loader.append_new_data()
         self.__read_data__()
+    
+    def get_last_time(self):
+        return self.last_time
 
     def __getitem__(self, index):
         s_begin = index
@@ -102,14 +105,11 @@ class Dataset_BTC_RT_minute(Dataset):
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
-        print('seq_x, seq_y, seq_x_mark, seq_y_mark')
-
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
-        print('__len__', len(self.data_x), self.seq_len, self.pred_len)
         # return len(self.data_x) - self.seq_len - self.pred_len + 1
-        return len(self.data_x) - self.seq_len
+        return len(self.data_x) - self.seq_len + 1
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)

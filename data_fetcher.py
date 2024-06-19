@@ -7,7 +7,7 @@ import os
 import threading
 
 class CryptoDataLoader:
-    def __init__(self, exchange_name='binance', symbol='BTC/USDT', timeframe='1m', csv_filename=None):
+    def __init__(self, exchange_name='binance', symbol='BTC/USDT', timeframe='1m', csv_filename=None, start_time_str=None):
         proxies = {
             'http': 'http://127.0.0.1:4780',
             'https': 'http://127.0.0.1:4780',
@@ -26,7 +26,10 @@ class CryptoDataLoader:
             self.csv_filename = csv_filename
 
         self.window_size = 300  # Buffer for the real-time data loading
-        self.start_time_str = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+        if(start_time_str == None):
+            self.start_time_str = (datetime.datetime.utcnow() - datetime.timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            self.start_time_str = start_time_str
         self.from_ts = self.exchange.parse8601(self.start_time_str)
         self.exit_flag = threading.Event()
         self.write_interval = 3600  # Write to CSV every hour (3600 seconds)
@@ -46,13 +49,21 @@ class CryptoDataLoader:
     def fetch_all_ohlcv(self, since):
         all_bars = []
         while True:
-            bars = self.exchange.fetch_ohlcv(self.symbol, self.timeframe, since=since, limit=1000)
-            if not bars:
-                break
-            all_bars.extend(bars)
-            since = bars[-1][0] + 1  # Move to the next chunk
-            time.sleep(self.exchange.rateLimit / 1000)  # Respect rate limit
+            try:
+                bars = self.exchange.fetch_ohlcv(self.symbol, self.timeframe, since=since, limit=1000)
+                if not bars:
+                    break
+                all_bars.extend(bars)
+                since = bars[-1][0] + 1  # Move to the next chunk
+                time.sleep(self.exchange.rateLimit / 1000)  # Respect rate limit
+            except ccxt.NetworkError as e:
+                print(f"Network error: {e}. Retrying in 20 seconds...")
+                time.sleep(20)
+            except ccxt.ExchangeError as e:
+                print(f"Exchange error: {e}. Retrying in 20 seconds...")
+                time.sleep(20)
         return all_bars
+
 
     @staticmethod
     def add_indicators(df):
@@ -124,19 +135,23 @@ class CryptoDataLoader:
     def stop(self):
         self.exit_flag.set()
         self.write_thread.join()
-        self.save_to_csv()
+        # self.save_to_csv()
         print("Data loader has been stopped and data saved to CSV.")
 
 if __name__ == "__main__":
     exchange_name = 'binance'
     symbol = 'BTC/USDT'
     timeframe = '1m'
-    csv_filename = f'./dataset/{symbol.replace("/", "_")}-{timeframe}.csv'
-    loader = CryptoDataLoader(exchange_name, symbol, timeframe)
+    start_time_str = '2024-06-01 00:00:00'
+    csv_filename = f'./dataset/btc/{symbol.replace("/", "_")}-{start_time_str[:10]}-{timeframe}.csv'
 
-    try:
-        while True:
-            loader.append_new_data()
-            time.sleep(60)  # Fetch new data every minute
-    except KeyboardInterrupt:
-        loader.stop()
+    # loader = CryptoDataLoader(exchange_name, symbol, timeframe)
+    # try:
+    #     while True:
+    #         loader.append_new_data()
+    #         time.sleep(60)  # Fetch new data every minute
+    # except KeyboardInterrupt:
+    #     loader.stop()
+
+    loader = CryptoDataLoader(exchange_name, symbol, timeframe, csv_filename, start_time_str)
+    loader.stop()
