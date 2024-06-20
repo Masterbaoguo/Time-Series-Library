@@ -142,7 +142,7 @@ if __name__ == "__main__":
     exchange_name = 'binance'
     symbol = 'BTC/USDT'
     timeframe = '1m'
-    start_time_str = '2024-06-01 00:00:00'
+    start_time_str = '2020-01-01 00:00:00'
     csv_filename = f'./dataset/btc/{symbol.replace("/", "_")}-{start_time_str[:10]}-{timeframe}.csv'
 
     # loader = CryptoDataLoader(exchange_name, symbol, timeframe)
