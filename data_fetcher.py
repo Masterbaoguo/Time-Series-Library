@@ -42,8 +42,8 @@ class CryptoDataLoader:
             self.load_initial_data()
         else:
             self.df = pd.read_csv(self.csv_filename, parse_dates=['date'])
-            print(f"Data loaded from {self.csv_filename}")
-            self.print_latest_data()
+            # print(f"Data loaded from {self.csv_filename}")
+            # self.print_latest_data()
         
         
     def fetch_all_ohlcv(self, since):

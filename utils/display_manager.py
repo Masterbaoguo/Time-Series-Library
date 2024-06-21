@@ -5,12 +5,13 @@ import plotly.graph_objs as go
 from datetime import timedelta
 
 class DisplayManager:
-    def __init__(self, predictor, pred_time):
+    def __init__(self, predictor, pred_time, interval):
         self.predictor = predictor
         self.times_true = []
         self.true_prices = []
         self.pred_data = []  # List to hold future predictions
         self.pred_time = pred_time
+        self.interval = interval
 
     def update_data(self, time_last, true_last, pred_prices):
         self.times_true.append(time_last)
@@ -72,7 +73,7 @@ class DisplayManager:
         app.layout = html.Div([
             html.H1("Real-Time BTC Price Prediction"),
             dcc.Graph(id="live-graph", style={'height': '100vh', 'width': '100vw'}),
-            dcc.Interval(id="update-interval", interval=60*1000, n_intervals=0)  # 每分钟刷新一次
+            dcc.Interval(id="update-interval", interval=self.interval*60*1000, n_intervals=0)  # 每self.interval分钟刷新一次
         ])
 
         @app.callback(
