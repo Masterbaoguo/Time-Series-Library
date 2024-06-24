@@ -5,35 +5,36 @@ class BTCTradingStrategy:
         self.contracts = 0  # 持有的合约数量
         self.entry_price = 0  # 建仓时的价格
         self.current_price = 0
+        self.future_price = 0
+        self.trade_pred_time = 0
         self.maker_fee = 0.000200  # Maker手续费
         self.taker_fee = 0.000500  # Taker手续费
 
-    def update(self, current_price, future_price):
+    def update(self, current_price, future_price, trade_pred_time):
         self.current_price = current_price
+        self.future_price = future_price
+        self.trade_pred_time = trade_pred_time
 
-        # 计算开仓和平仓的总手续费
-        maker_fee = current_price * self.maker_fee
-        taker_fee = current_price * self.taker_fee
-        total_fee_open = maker_fee
-        total_fee_close = taker_fee
+        open_long_threshold = current_price * (1 + self.maker_fee + self.taker_fee)
+        open_short_threshold = current_price * (1 - self.maker_fee - self.taker_fee)
 
         if self.position == 0:
             # 开仓
-            if future_price > current_price and (future_price - current_price) > (total_fee_open + total_fee_close):
+            if future_price > open_long_threshold:
                 self.open_long(current_price)
-            elif future_price < current_price and (current_price - future_price) > (total_fee_open + total_fee_close):
+            elif future_price < open_short_threshold:
                 self.open_short(current_price)
         elif self.position == 1:
             # 平仓或反手做空
-            if future_price < current_price and (current_price - future_price) > (total_fee_open + total_fee_close):
+            if future_price < current_price:
                 self.close_position(current_price)
-                if future_price < current_price:
+                if future_price < open_short_threshold:
                     self.open_short(current_price)
         elif self.position == -1:
             # 平仓或反手做多
-            if future_price > current_price and (future_price - current_price) > (total_fee_open + total_fee_close):
+            if future_price > current_price:
                 self.close_position(current_price)
-                if future_price > current_price:
+                if future_price > open_long_threshold:
                     self.open_long(current_price)
 
         self.print_total_assets()
@@ -99,13 +100,14 @@ class BTCTradingStrategy:
         print(f"Total assets value: ${total_value:.2f}")
         print(f"Cash balance: ${self.balance:.2f}")
         print(f"Contracts held: {self.contracts:.8f} ({position_type})")
+        print(f"  Current Price: ${self.current_price:.2f}")
+        print(f"  Future Price: ${self.future_price:.2f}")
 
     def print_trade_details(self, trade_type):
         print(f"{trade_type} Trade Details:")
         print(f"  Cash: ${self.balance:.2f}")
         print(f"  Contracts: {self.contracts:.8f}")
         print(f"  Entry Price: ${self.entry_price:.2f}")
-        print(f"  Current Price: ${self.current_price:.2f}")
 
     def print_profit_loss(self, profit_loss):
         print(f"Profit/Loss: ${profit_loss:.2f}")

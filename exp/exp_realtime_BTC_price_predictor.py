@@ -13,9 +13,10 @@ warnings.filterwarnings('ignore')
 class RealTimeBTCPricePredictor(Exp_Basic):
     def __init__(self, args):
         super(RealTimeBTCPricePredictor, self).__init__(args)
-        self.pred_time = 5
+        self.pred_time = 60
         self.interval = 1
         self.trade_interval = 1
+        self.trade_pred_time = 60
         self.time = 0
         self.display = DisplayManager(self, self.pred_time, self.interval)
         self.trade = BTCTradingStrategy()
@@ -31,7 +32,6 @@ class RealTimeBTCPricePredictor(Exp_Basic):
         return data_set, data_loader
 
     def predict(self):
-        self.time += self.interval
         test_data, test_loader = self._get_data(flag='test')
 
         with torch.no_grad():
@@ -73,11 +73,14 @@ class RealTimeBTCPricePredictor(Exp_Basic):
                 true_last = batch_x[0, :, -1][-1]
                 time_last = test_data.get_last_time()
 
+                print(f"time: {self.time}")
                 print(f"Predictions for next {self.pred_time} minutes starting from {time_last + timedelta(minutes=1)} : {pred_prices}")
                 print(f"True at {time_last} : {true_last}")
                 self.display.update_data(time_last, true_last, pred_prices)
                 if(self.time % self.trade_interval == 0):
-                    self.trade.update(true_last, pred_prices[self.trade_interval - 1])
+                    self.trade.update(true_last, pred_prices[self.trade_pred_time - 1], self.trade_pred_time)
+
+        self.time += self.interval
 
 
     def test(self, setting, test=0):
