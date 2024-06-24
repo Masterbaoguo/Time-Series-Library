@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import os
 import warnings
-from datetime import timedelta
+from datetime import timedelta, datetime
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
 from utils.display_manager import DisplayManager
@@ -18,8 +18,9 @@ class RealTimeBTCPricePredictor(Exp_Basic):
         self.trade_interval = 1
         self.trade_pred_time = 60
         self.time = 0
-        self.display = DisplayManager(self, self.pred_time, self.interval)
-        self.trade = BTCTradingStrategy()
+        self.trade = BTCTradingStrategy(self.trade_pred_time, self.pred_time)
+        self.display = DisplayManager(self, self.pred_time, self.interval, self.trade)
+        self.last_test_data = None
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -33,6 +34,12 @@ class RealTimeBTCPricePredictor(Exp_Basic):
 
     def predict(self):
         test_data, test_loader = self._get_data(flag='test')
+
+        # Check if the test data has changed
+        if self.last_test_data is not None and test_data == self.last_test_data:
+            print("Test data has not changed, skipping prediction.")
+            return
+        self.last_test_data = test_data
 
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
@@ -69,19 +76,19 @@ class RealTimeBTCPricePredictor(Exp_Basic):
                 outputs = outputs[:, :, f_dim:]
                 batch_x = batch_x[:, :, f_dim:]
 
-                pred_prices = outputs[0, :, -1][:self.pred_time]  # next 10 minutes predictions
-                true_last = batch_x[0, :, -1][-1]
+                pred_prices = outputs[0, :, -1][:self.pred_time]
+                true_prices = batch_x[0, :, -1]
+                true_last = true_prices[-1]
                 time_last = test_data.get_last_time()
 
                 print(f"time: {self.time}")
                 print(f"Predictions for next {self.pred_time} minutes starting from {time_last + timedelta(minutes=1)} : {pred_prices}")
                 print(f"True at {time_last} : {true_last}")
-                self.display.update_data(time_last, true_last, pred_prices)
+                self.display.update_data(time_last, true_prices, pred_prices)
                 if(self.time % self.trade_interval == 0):
-                    self.trade.update(true_last, pred_prices[self.trade_pred_time - 1], self.trade_pred_time)
+                    self.trade.update(true_prices, pred_prices)
 
         self.time += self.interval
-
 
     def test(self, setting, test=0):
         checkpoint_path = os.path.join('./checkpoints/rtBTC', 'checkpoint.pth')
