@@ -22,15 +22,8 @@ class DisplayManager:
         self.true_prices.append(float("{:.2f}".format(true_last)))  # current true price, rounded to 2 decimal places
 
         # Update trading strategy and record asset value
-        self.trading_strategy.update(true_prices, pred_prices)
         self.asset_times.append(time_last)
         self.asset_values.append(self.trading_strategy.asset_history[-1])
-
-        if len(self.times_true) > 96:
-            self.times_true.pop(0)
-            self.true_prices.pop(0)
-            self.asset_times.pop(0)
-            self.asset_values.pop(0)
 
         pred_prices = [float("{:.2f}".format(p)) for p in pred_prices.tolist()]
 
@@ -40,23 +33,11 @@ class DisplayManager:
             'prices': [true_last] + pred_prices  # include the true last price as the first prediction
         })
 
-        if len(self.pred_data) > 96:
+        if len(self.pred_data) > self.pred_time:
             self.pred_data.pop(0)
 
     def get_figure(self):
         fig = go.Figure()
-
-        # BTC True Price trace
-        true_price_trace = go.Scatter(
-            x=self.times_true, 
-            y=self.true_prices, 
-            mode='lines+markers', 
-            name='True Price', 
-            marker=dict(size=6),
-            line=dict(width=4),  # 加粗线宽
-            yaxis='y1'
-        )
-        fig.add_trace(true_price_trace)
 
         # BTC Predicted Prices traces
         for i, pred in enumerate(self.pred_data):
@@ -79,10 +60,22 @@ class DisplayManager:
             mode='lines+markers',
             name='Total Asset Value',
             marker=dict(size=6, color='red'),
-            line=dict(width=4, color='red'),  # 设置线宽和颜色
+            line=dict(width=5, color='red'),  # 设置线宽和颜色
             yaxis='y2'
         )
         fig.add_trace(asset_value_trace)
+
+        # BTC True Price trace, added last to be on top
+        true_price_trace = go.Scatter(
+            x=self.times_true, 
+            y=self.true_prices, 
+            mode='lines+markers', 
+            name='True Price', 
+            marker=dict(size=6, color='blue'),
+            line=dict(width=5, color='blue'),  # 加粗线宽
+            yaxis='y1'
+        )
+        fig.add_trace(true_price_trace)
 
         # Update layout to add secondary y-axis
         fig.update_layout(
@@ -101,7 +94,8 @@ class DisplayManager:
                 tickformat=".2f",
                 titlefont=dict(color='red'),
                 tickfont=dict(color='red')
-            )
+            ),
+            xaxis_rangeslider=dict(visible=True)  # 添加范围滑块以启用拖动功能
         )
 
         return fig
@@ -111,7 +105,7 @@ class DisplayManager:
 
         app.layout = html.Div([
             html.H1("Real-Time BTC Price Prediction and Asset Value"),
-            dcc.Graph(id="live-graph", style={'height': '100vh', 'width': '95vw'}),
+            dcc.Graph(id="live-graph", style={'height': '100vh', 'width': '100vw'}),
             dcc.Interval(id="update-interval", interval=self.interval*60*1000, n_intervals=0)  # 每self.interval分钟刷新一次
         ])
 

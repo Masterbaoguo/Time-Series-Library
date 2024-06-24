@@ -84,9 +84,9 @@ class RealTimeBTCPricePredictor(Exp_Basic):
                 print(f"time: {self.time}")
                 print(f"Predictions for next {self.pred_time} minutes starting from {time_last + timedelta(minutes=1)} : {pred_prices}")
                 print(f"True at {time_last} : {true_last}")
-                self.display.update_data(time_last, true_prices, pred_prices)
                 if(self.time % self.trade_interval == 0):
                     self.trade.update(true_prices, pred_prices)
+                self.display.update_data(time_last, true_prices, pred_prices)
 
         self.time += self.interval
 
