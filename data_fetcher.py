@@ -117,13 +117,13 @@ class CryptoDataLoader:
             self.df.to_csv(self.csv_filename, index=False)
             print(f"Data saved to {self.csv_filename}")
 
-    def get_data(self, pos=None):
+    def get_data(self, begin=None, end=None):
         # print("Returning all data:")
         # print(self.df)
-        if(pos == None):
+        if(begin == None):
             return self.df
         else:
-            return self.df.iloc[pos:]
+            return self.df.iloc[begin:end]
 
     def print_latest_data(self):
         if not self.df.empty:

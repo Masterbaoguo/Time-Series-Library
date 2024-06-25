@@ -36,14 +36,18 @@ class Dataset_BTC_RT_minute(Dataset):
 
         # Initialize CryptoDataLoader
         self.loader = CryptoDataLoader()
-        self.loader.append_new_data()
+        if(args.backtest == False):
+            self.loader.append_new_data()
 
         # Initial read data
         self.__read_data__()
 
     def __read_data__(self):
         self.scaler = StandardScaler()
-        df_raw = self.loader.get_data(-self.seq_len)
+        if(self.args.backtest == False):
+            df_raw = self.loader.get_data(-self.seq_len)
+        else:
+            df_raw = self.loader.get_data(self.args.seq_begin, self.args.seq_end)
         self.loader.stop()
         '''
         df_raw.columns: ['date', ...(other features), target feature]
@@ -85,11 +89,6 @@ class Dataset_BTC_RT_minute(Dataset):
         self.data_y = data
 
         self.data_stamp = data_stamp
-
-    def update_data(self):
-        """Method to update data by re-fetching the latest data and reprocessing it."""
-        self.loader.append_new_data()
-        self.__read_data__()
     
     def get_last_time(self):
         return self.last_time

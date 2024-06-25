@@ -132,6 +132,7 @@ if __name__ == '__main__':
     parser.add_argument('--discdtw', default=False, action="store_true", help="Discrimitive DTW warp preset augmentation")
     parser.add_argument('--discsdtw', default=False, action="store_true", help="Discrimitive shapeDTW warp preset augmentation")
     parser.add_argument('--extra_tag', type=str, default="", help="Anything extra")
+    parser.add_argument('--backtest', default=False, action="store_true", help="backtest")
 
     args = parser.parse_args()
     # args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False

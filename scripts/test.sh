@@ -22,3 +22,5 @@ cd D:\project\Time-Series-Library\Time-Series-Library
 conda activate TTime-Series-Library
 
 python -u run.py  --task_name btc_price_forecast  --is_training 0 --model_id BTCh_96_96  --model PatchTST  --data rtBTC  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 11  --dec_in 11  --c_out 11  --des 'Exp'  --n_heads 2  --batch_size 1  --itr 1 --num_workers 0  --freq t --inverse
+
+python -u run.py  --task_name btc_price_forecast  --is_training 0 --model_id BTCh_96_96  --model PatchTST  --data rtBTC  --features M  --seq_len 96  --label_len 48  --pred_len 96  --e_layers 1  --d_layers 1  --factor 3  --enc_in 11  --dec_in 11  --c_out 11  --des 'Exp'  --n_heads 2  --batch_size 1  --itr 1 --num_workers 0  --freq t --inverse --backtest

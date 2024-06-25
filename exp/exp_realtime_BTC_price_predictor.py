@@ -21,6 +21,8 @@ class RealTimeBTCPricePredictor(Exp_Basic):
         self.trade = BTCTradingStrategy(self.trade_pred_time, self.pred_time)
         self.display = DisplayManager(self, self.pred_time, self.interval, self.trade)
         self.last_test_data = None
+        self.args.seq_begin = 100
+        self.args.seq_end = self.args.seq_begin + self.args.seq_len
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -34,6 +36,8 @@ class RealTimeBTCPricePredictor(Exp_Basic):
 
     def predict(self):
         test_data, test_loader = self._get_data(flag='test')
+        self.args.seq_begin += 1
+        self.args.seq_end += 1
 
         # Check if the test data has changed
         if self.last_test_data is not None and test_data == self.last_test_data:
