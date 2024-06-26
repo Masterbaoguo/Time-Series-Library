@@ -64,7 +64,6 @@ class CryptoDataLoader:
                 time.sleep(20)
         return all_bars
 
-
     @staticmethod
     def add_indicators(df):
         df['SMA_10'] = ta.trend.sma_indicator(df['OT'], window=10)
@@ -74,8 +73,37 @@ class CryptoDataLoader:
         df['MACD'] = macd.macd()
         df['MACD_signal'] = macd.macd_signal()
         df['MACD_diff'] = macd.macd_diff()
+
+        # 成交量相关特征
+        df['VWAP'] = (df['volume'] * (df['high'] + df['low'] + df['OT']) / 3).cumsum() / df['volume'].cumsum()
+        df['Volume_Ratio'] = df['volume'] / df['volume'].shift(1)
+        df['Volume_Momentum'] = df['volume'].diff()
+
+        # 其他高级特征
+        df['STD_20'] = df['OT'].rolling(window=20).std()  # 标准差
+        df['ATR'] = ta.volatility.average_true_range(df['high'], df['low'], df['OT'], window=14)  # 真实波动幅度均值
+        bollinger = ta.volatility.BollingerBands(df['OT'], window=20, window_dev=2)
+        df['Bollinger_High'] = bollinger.bollinger_hband()
+        df['Bollinger_Low'] = bollinger.bollinger_lband()
+        df['CMO_14'] = CryptoDataLoader.chande_momentum_oscillator(df['OT'], window=14)  # 钱德动量摆动指标
+        df['Volume_MA_20'] = df['volume'].rolling(window=20).mean()  # 成交量移动平均线
+
+        # 检查无穷大值和非常大的值并进行处理
+        df.replace([float('inf'), float('-inf')], pd.NA, inplace=True)
+        df.dropna(inplace=True)
+        
+        # 填补缺失值
         df.fillna(method='bfill', inplace=True)
+
         return df
+
+    @staticmethod
+    def chande_momentum_oscillator(series, window):
+        diff = series.diff(1)
+        sum_of_gains = diff.where(diff > 0, 0).rolling(window=window).sum()
+        sum_of_losses = (-diff).where(diff < 0, 0).rolling(window=window).sum()
+        cmo = 100 * (sum_of_gains - sum_of_losses) / (sum_of_gains + sum_of_losses)
+        return cmo
     
     def load_initial_data(self, from_ts=None):
         from_ts = from_ts or self.from_ts
@@ -142,7 +170,7 @@ if __name__ == "__main__":
     exchange_name = 'binance'
     symbol = 'BTC/USDT'
     timeframe = '1m'
-    start_time_str = '2020-01-01 00:00:00'
+    start_time_str = '2024-01-01 00:00:00'
     csv_filename = f'./dataset/btc/{symbol.replace("/", "_")}-{start_time_str[:10]}-{timeframe}.csv'
 
     # loader = CryptoDataLoader(exchange_name, symbol, timeframe)
