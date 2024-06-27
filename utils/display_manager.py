@@ -34,7 +34,7 @@ class DisplayManager:
             'prices': [true_last] + pred_prices  # 包括真实最后价格作为第一个预测
         })
 
-        if len(self.pred_data) > self.pred_time:
+        if len(self.pred_data) > self.pred_time / 2:
             self.pred_data.pop(0)
 
     def get_figure(self):

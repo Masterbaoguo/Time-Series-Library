@@ -150,7 +150,10 @@ if __name__ == '__main__':
     print_args(args)
 
     if args.task_name == 'long_term_forecast':
-        Exp = Exp_Long_Term_Forecast
+        if args.data == 'rtBTC':
+            Exp = RealTimeBTCPricePredictor
+        else:
+            Exp = Exp_Long_Term_Forecast
     elif args.task_name == 'short_term_forecast':
         Exp = Exp_Short_Term_Forecast
     elif args.task_name == 'imputation':
